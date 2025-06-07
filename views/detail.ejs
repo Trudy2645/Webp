@@ -163,7 +163,6 @@
     .actions a.btn-primary:hover {
       background-color: #0a58ca;
     }
-    /* 이전에 사용하던 .actions a.btn-danger 스타일은 .delete-button-header로 옮겨졌으므로 필요 없거나 재정의될 수 있습니다. */
 
 
     /* 답글 섹션 */
@@ -189,6 +188,7 @@
       padding: 20px;
       margin-bottom: 15px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      position: relative; /* 답글 액션 버튼 위치 조정을 위해 */
     }
     .reply-header {
       display: flex;
@@ -210,6 +210,26 @@
       line-height: 1.6;
       white-space: pre-line;
       margin-top: 10px;
+    }
+
+    /* 답글 내 수정/삭제 버튼 스타일 */
+    .reply-actions {
+      position: absolute; /* 답글 아이템 우측 상단에 위치 */
+      top: 15px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    .reply-actions a {
+      font-size: 0.85em;
+      color: #6c757d;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+    .reply-actions a:hover {
+      color: #0d6efd;
+      text-decoration: underline;
     }
 
     footer {
@@ -246,9 +266,11 @@
   <main>
     <div class="post-header-container">
       <h2 class="post-title"><%= post.title %></h2>
-      <div class="delete-button-header">
-        <a href="/board/delete/<%= post.id %>" onclick="return confirm('정말 삭제하시겠습니까? 관련 답글도 모두 삭제됩니다.')">[삭제]</a>
-      </div>
+      <% if (post.isAuthor) { %>
+        <div class="delete-button-header">
+          <a href="/board/delete/<%= post.id %>" onclick="return confirm('정말 삭제하시겠습니까? 관련 답글도 모두 삭제됩니다.')">[삭제]</a>
+        </div>
+      <% } %>
     </div>
 
     <p class="meta">작성자: <%= post.author %> | 작성일: <%= post.created_at ? new Date(post.created_at).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '날짜 없음' %></p>
@@ -270,7 +292,9 @@
 
     <div class="actions">
       <a href="/board/reply/<%= post.id %>" class="btn btn-primary">[답글 달기]</a>
-      <a href="/board/edit/<%= post.id %>">[수정]</a>
+      <% if (post.isAuthor) { %>
+        <a href="/board/edit/<%= post.id %>">[수정]</a>
+      <% } %>
       <a href="/board">[목록]</a>
     </div>
 
@@ -285,7 +309,13 @@
                 <span class="reply-date"><%= reply.created_at ? new Date(reply.created_at).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '날짜 없음' %></span>
               </div>
               <p class="reply-content"><%= reply.content %></p>
-              </li>
+              <% if (reply.isAuthor) { %>
+                <div class="reply-actions">
+                  <a href="/board/edit/<%= reply.id %>">수정</a>
+                  <a href="/board/delete/<%= reply.id %>" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</a>
+                </div>
+              <% } %>
+            </li>
           <% }); %>
         </ul>
       <% } else { %>

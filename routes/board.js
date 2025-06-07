@@ -213,40 +213,54 @@ router.post('/create', (req, res) => {
 
 // 수정 폼
 router.get('/edit/:id', (req, res) => {
-    // **수정1: 로그인 여부 확인**
     if (!req.session.user) {
+        console.log(`수정 폼 요청 (ID: ${req.params.id}): 로그인되지 않은 사용자`); // 추가
         return res.redirect('/user/login?redirect=/board/edit/' + req.params.id);
     }
 
     db.get('SELECT * FROM posts WHERE id = ?', [req.params.id], (err, post) => {
-        if (err || !post) return res.send('글 없음');
+        if (err || !post) {
+            console.error(`수정 폼 요청 (ID: ${req.params.id}): 글 없음 또는 DB 오류`, err); // 추가
+            return res.send('글 없음');
+        }
 
-        // **수정2: 본인 글이 아니면 접근 거부**
+        // --- 디버깅용 로그 추가 ---
+        console.log(`--- 수정 폼 요청 (ID: ${req.params.id}) ---`);
+        console.log(`게시글 작성자: "${post.author}", 로그인 사용자: "${req.session.user.username}"`);
+        // --- 디버깅용 로그 끝 ---
+
         if (post.author !== req.session.user.username) {
+            console.warn(`수정 권한 없음: 게시글 작성자("${post.author}") !== 로그인 사용자("${req.session.user.username}")`); // 추가
             return res.status(403).send('수정 권한이 없습니다.');
         }
 
         res.render('edit',{ post, user: req.session.user });
     });
 });
-
 // 수정 처리
 router.post('/edit/:id', (req, res) => {
-    // **수정1: 로그인 여부 확인**
     if (!req.session.user) {
+        console.log(`수정 처리 요청 (ID: ${req.params.id}): 로그인되지 않은 사용자`); // 추가
         return res.status(403).send('로그인 후 수정할 수 있습니다.');
     }
 
     const postId = req.params.id;
     const { title, content } = req.body;
+    const currentUserUsername = req.session.user.username;
 
     db.get('SELECT author, parent_id FROM posts WHERE id = ?', [postId], (err, post) => {
         if (err || !post) {
+            console.error(`수정 처리 요청 (ID: ${postId}): 글 없음 또는 DB 오류`, err); // 추가
             return res.send('글 없음');
         }
 
-        // **수정2: 본인 글이 아니면 수정 거부**
-        if (post.author !== req.session.user.username) {
+        // --- 디버깅용 로그 추가 ---
+        console.log(`--- 수정 처리 요청 (ID: ${postId}) ---`);
+        console.log(`게시글 작성자: "${post.author}", 로그인 사용자: "${currentUserUsername}"`);
+        // --- 디버깅용 로그 끝 ---
+
+        if (post.author !== currentUserUsername) {
+            console.warn(`수정 권한 없음: 게시글 작성자("${post.author}") !== 로그인 사용자("${currentUserUsername}")`); // 추가
             return res.status(403).send('수정 권한이 없습니다.');
         }
 
@@ -255,10 +269,10 @@ router.post('/edit/:id', (req, res) => {
             [title, content, postId],
             (err) => {
                 if (err) {
-                    console.error('수정 실패:', err.message);
+                    console.error(`수정 실패 (ID: ${postId}):`, err.message); // 추가
                     return res.send('수정 실패');
                 }
-                // 답글이었다면 원글 상세 페이지로, 원글이었다면 자신의 상세 페이지로
+                console.log(`게시글 ${postId} 수정 성공.`); // 추가
                 const redirectId = post.parent_id ? post.parent_id : postId;
                 res.redirect('/board/view/' + redirectId);
             }
@@ -268,59 +282,72 @@ router.post('/edit/:id', (req, res) => {
 
 // 삭제 (원글 삭제 시 답글도 함께 삭제)
 router.get('/delete/:id', (req, res) => {
-    // **수정1: 로그인 여부 확인**
     if (!req.session.user) {
-        return res.redirect('/user/login?redirect=/board'); // 삭제는 보통 목록으로 리다이렉트하므로, 이전 페이지로 리다이렉트할 필요는 없음
+        console.log(`삭제 요청 (ID: ${req.params.id}): 로그인되지 않은 사용자`); // 추가
+        return res.redirect('/user/login?redirect=/board');
     }
 
     const postIdToDelete = req.params.id;
+    const currentUserUsername = req.session.user.username;
 
     db.get('SELECT author, parent_id FROM posts WHERE id = ?', [postIdToDelete], (err, post) => {
         if (err || !post) {
+            console.error(`삭제 요청 (ID: ${postIdToDelete}): 글 없음 또는 DB 오류`, err); // 추가
             return res.send('글 없음');
         }
 
-        // **수정2: 본인 글이 아니면 삭제 거부**
-        if (post.author !== req.session.user.username) {
+        // --- 디버깅용 로그 추가 ---
+        console.log(`--- 삭제 요청 (ID: ${postIdToDelete}) ---`);
+        console.log(`게시글 작성자: "${post.author}", 로그인 사용자: "${currentUserUsername}"`);
+        // --- 디버깅용 로그 끝 ---
+
+        if (post.author !== currentUserUsername) {
+            console.warn(`삭제 권한 없음: 게시글 작성자("${post.author}") !== 로그인 사용자("${currentUserUsername}")`); // 추가
             return res.status(403).send('삭제 권한이 없습니다.');
         }
 
         db.serialize(() => {
-            // 트랜잭션 시작 (선택 사항이지만 안전한 삭제를 위해 권장)
-            db.run('BEGIN TRANSACTION;');
+            db.run('BEGIN TRANSACTION;', (beginErr) => { // 트랜잭션 시작 콜백 추가
+                if (beginErr) {
+                    console.error('트랜잭션 시작 실패:', beginErr.message);
+                    return res.send('삭제 실패 (트랜잭션 오류)');
+                }
+                console.log(`트랜잭션 시작: 게시글 ID ${postIdToDelete}`); // 추가
+            });
 
-            // 1. 해당 게시글이 원글이라면 모든 답글 삭제
-            // 2. 해당 게시글이 답글이라면 해당 답글만 삭제
             let deleteQuery = 'DELETE FROM posts WHERE id = ?';
             let deleteParams = [postIdToDelete];
 
-            if (!post.parent_id) { // 원글인 경우, 해당 원글과 그 모든 답글을 삭제
+            if (!post.parent_id) {
                 deleteQuery = 'DELETE FROM posts WHERE id = ? OR parent_id = ?';
                 deleteParams = [postIdToDelete, postIdToDelete];
+                console.log(`원글 및 답글 삭제 쿼리: ${deleteQuery}, 파라미터: ${deleteParams}`); // 추가
+            } else {
+                console.log(`답글만 삭제 쿼리: ${deleteQuery}, 파라미터: ${deleteParams}`); // 추가
             }
-
 
             db.run(deleteQuery, deleteParams, (err) => {
                 if (err) {
                     console.error('게시글(및 답글) 삭제 실패:', err.message);
-                    db.run('ROLLBACK;'); // 오류 발생 시 롤백
+                    db.run('ROLLBACK;');
                     return res.send('게시글 삭제 실패');
                 }
-                // 2. 게시글에 연결된 파일 정보 삭제 (옵션)
-                // (주의: 원글 삭제 시 연결된 모든 답글의 파일까지 삭제하려면 추가 쿼리 필요)
-                // 지금은 삭제하는 게시글의 파일만 삭제합니다.
+                console.log(`게시글(및 답글) 삭제 성공: ID ${postIdToDelete}`); // 추가
+
                 db.run('DELETE FROM files WHERE post_id = ?', [postIdToDelete], (err) => {
                     if (err) {
                         console.error('파일 정보 삭제 실패:', err.message);
                         db.run('ROLLBACK;');
                         return res.send('파일 정보 삭제 실패');
                     }
-                    db.run('COMMIT;', (commitErr) => { // 모든 작업 성공 시 커밋
+                    console.log(`파일 정보 삭제 성공: Post ID ${postIdToDelete}`); // 추가
+
+                    db.run('COMMIT;', (commitErr) => {
                         if (commitErr) {
                             console.error('트랜잭션 커밋 실패:', commitErr.message);
                             return res.send('삭제 실패 (트랜잭션 오류)');
                         }
-                        // 삭제 후 리다이렉션: 답글이었다면 원글의 상세 페이지로, 원글이었다면 게시판 목록으로
+                        console.log(`트랜잭션 커밋 성공: 게시글 ID ${postIdToDelete} 삭제 완료`); // 추가
                         if (post.parent_id) {
                             res.redirect('/board/view/' + post.parent_id);
                         } else {
