@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>주문 확인</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Jua', sans-serif;
+      background-color: #0d2b45;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: #ffe480;
+      padding: 40px;
+      border-radius: 16px;
+      text-align: center;
+      width: 360px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+      color: #0d2b45;
+    }
+
+    .container h2 {
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+
+    .container p {
+      font-size: 18px;
+      margin: 12px 0;
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 20px;
+      background-color: #ff6b00;
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      border-radius: 8px;
+      transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #e05400;
+    }
+
+    .emoji {
+      font-size: 38px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="emoji">📦</div>
+    <h2>✅ 주문 확인</h2>
+
+    <% if (typeof error !== 'undefined') { %>
+      <p class="error"><%= error %></p>
+    <% } else { %>
+      <p><%= user.name %>님, 주문이 정상적으로 접수되었습니다.</p>
+      <p>감사합니다!</p>
+    <% } %>
+
+    <a href="/" class="btn">🏠 홈으로 돌아가기</a>
+  </div>
+</body>
+</html>

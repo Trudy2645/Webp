@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= post.title %> - 게시글 보기</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      background-color: #ffffff;
+      border-bottom: 1px solid #dee2e6;
+      padding: 1.2rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    header h1 {
+      font-weight: 800;
+      font-size: 1.8rem;
+      margin: 0;
+      color: #212529;
+    }
+    nav a {
+      margin-left: 1.5rem;
+      color: #495057;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    nav a:hover {
+      color: #0d6efd;
+    }
+
+    main {
+      background-color: #ffffff;
+      padding: 30px 40px;
+      border-radius: 16px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      width: 80%;
+      max-width: 900px;
+      margin: 2rem auto;
+      flex-grow: 1;
+    }
+
+    /* 제목과 삭제 버튼을 위한 컨테이너 */
+    .post-header-container {
+      display: flex;
+      justify-content: space-between; /* 양 끝 정렬 */
+      align-items: center; /* 세로 중앙 정렬 */
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #0d6efd; /* 강조 색상 */
+      padding-bottom: 10px;
+    }
+
+    h2.post-title { /* 제목 스타일 */
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #212529;
+      margin: 0; /* 기본 마진 제거 */
+      flex-grow: 1; /* 제목이 가능한 공간을 채우도록 */
+      padding-right: 15px; /* 삭제 버튼과의 간격 */
+    }
+
+    .delete-button-header { /* 제목 옆 삭제 버튼 스타일 */
+      white-space: nowrap; /* 줄바꿈 방지 */
+    }
+    .delete-button-header a {
+      padding: 5px 12px; /* 버튼 패딩 조절 */
+      border-radius: 5px;
+      background-color: #dc3545; /* 삭제 버튼 색상 */
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+      font-size: 0.9rem; /* 버튼 폰트 크기 조절 */
+    }
+    .delete-button-header a:hover {
+      background-color: #c82333;
+      text-decoration: none;
+    }
+
+
+    .meta {
+      color: #6c757d;
+      font-size: 0.95em;
+      margin-bottom: 20px;
+    }
+
+    .content {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+      line-height: 1.8;
+      color: #343a40;
+      min-height: 150px; /* 내용 영역 최소 높이 */
+      white-space: pre-line; /* 줄바꿈 유지 */
+    }
+
+    .attachments {
+      margin-top: 20px;
+      border-top: 1px dashed #ced4da;
+      padding-top: 20px;
+    }
+    .attachments h4 {
+      font-size: 1.2rem;
+      color: #495057;
+      margin-bottom: 15px;
+    }
+    .attachments ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .attachments li {
+      margin-bottom: 8px;
+    }
+    .attachments a {
+      color: #0d6efd;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .attachments a:hover {
+      text-decoration: underline;
+    }
+
+    .actions {
+      display: flex;
+      gap: 15px;
+      justify-content: flex-end; /* 오른쪽 정렬 */
+      margin-bottom: 30px;
+    }
+    .actions a {
+      padding: 8px 18px;
+      border-radius: 5px;
+      background-color: #e9ecef;
+      color: #495057;
+      text-decoration: none;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-weight: 500;
+    }
+    .actions a:hover {
+      background-color: #dee2e6;
+      color: #212529;
+      text-decoration: none;
+    }
+    .actions a.btn-primary {
+      background-color: #0d6efd;
+      color: #ffffff;
+    }
+    .actions a.btn-primary:hover {
+      background-color: #0a58ca;
+    }
+    /* 이전에 사용하던 .actions a.btn-danger 스타일은 .delete-button-header로 옮겨졌으므로 필요 없거나 재정의될 수 있습니다. */
+
+
+    /* 답글 섹션 */
+    .replies-section {
+      margin-top: 40px;
+      border-top: 2px solid #0d6efd; /* 강조 색상 */
+      padding-top: 30px;
+    }
+    .replies-section h3 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #212529;
+      margin-bottom: 25px;
+    }
+    .reply-list {
+      list-style-type: none;
+      padding: 0;
+    }
+    .reply-item {
+      background-color: #ffffff;
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .reply-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .reply-author {
+      font-weight: 700;
+      color: #343a40;
+      font-size: 1.1em;
+    }
+    .reply-date {
+      color: #868e96;
+      font-size: 0.85em;
+    }
+    .reply-content {
+      color: #495057;
+      line-height: 1.6;
+      white-space: pre-line;
+      margin-top: 10px;
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 2rem 0;
+      background-color: #ffffff;
+      border-top: 1px solid #dee2e6;
+      color: #868e96;
+      font-size: 0.9rem;
+      text-align: center;
+      width: 100%;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🪬 고객센터</h1>
+    <nav>
+      <a href="/">홈</a>
+      <a href="/products">상품목록</a>
+      <a href="/cart">장바구니</a>
+      <a href="/board">고객센터</a>
+      <% if (user) { %>
+        <a href="/user/logout">로그아웃</a>
+      <% } else { %>
+        <a href="/login">로그인</a>
+        <a href="/user/register">회원가입</a>
+      <% } %>
+    </nav>
+  </header>
+
+  <main>
+    <div class="post-header-container">
+      <h2 class="post-title"><%= post.title %></h2>
+      <div class="delete-button-header">
+        <a href="/board/delete/<%= post.id %>" onclick="return confirm('정말 삭제하시겠습니까? 관련 답글도 모두 삭제됩니다.')">[삭제]</a>
+      </div>
+    </div>
+
+    <p class="meta">작성자: <%= post.author %> | 작성일: <%= post.created_at ? new Date(post.created_at).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '날짜 없음' %></p>
+
+    <div class="content">
+      <%= post.content %>
+    </div>
+
+    <% if (files && files.length > 0) { %>
+      <div class="attachments">
+        <h4>첨부파일</h4>
+        <ul>
+          <% files.forEach(file => { %>
+            <li><a href="/uploads/<%= file.filename %>" download><%= file.filename %></a></li>
+          <% }) %>
+        </ul>
+      </div>
+    <% } %>
+
+    <div class="actions">
+      <a href="/board/reply/<%= post.id %>" class="btn btn-primary">[답글 달기]</a>
+      <a href="/board/edit/<%= post.id %>">[수정]</a>
+      <a href="/board">[목록]</a>
+    </div>
+
+    <div class="replies-section">
+      <h3>답글 (<%= replies.length %>)</h3>
+      <% if (replies && replies.length > 0) { %>
+        <ul class="reply-list">
+          <% replies.forEach(reply => { %>
+            <li class="reply-item">
+              <div class="reply-header">
+                <span class="reply-author"><%= reply.author %></span>
+                <span class="reply-date"><%= reply.created_at ? new Date(reply.created_at).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '날짜 없음' %></span>
+              </div>
+              <p class="reply-content"><%= reply.content %></p>
+              </li>
+          <% }); %>
+        </ul>
+      <% } else { %>
+        <p>아직 답글이 없습니다.</p>
+      <% } %>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 고객센터 시스템. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

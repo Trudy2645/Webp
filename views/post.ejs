@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= post ? '글 수정' : (parentId ? '답글 작성' : '새 글 작성') %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: #ffffff;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    h2 {
+      font-weight: 700;
+      font-size: 2rem;
+      color: #343a40;
+      margin-bottom: 2rem;
+    }
+
+    form {
+      text-align: left;
+    }
+
+    label {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #ced4da;
+      border-radius: 8px;
+      font-size: 1em;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+      outline: none;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    input[type="file"] {
+        width: 100%;
+        margin-top: 10px;
+        margin-bottom: 20px;
+        font-size: 0.95em;
+        color: #495057;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 12px;
+      background-color: #0d6efd;
+      color: white;
+      font-size: 1.1em;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #0a58ca;
+      transform: translateY(-2px);
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 1.5rem;
+      color: #6c757d;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+      color: #0d6efd;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2><%= post ? '글 수정' : (parentId ? '답글 작성' : '새 글 작성') %></h2>
+
+    <form action="<%= post ? '/board/edit/' + post.id : '/board/new' %>" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="parent_id" value="<%= post ? post.parent_id : parentId %>">
+
+      <label for="title">제목</label>
+      <input type="text" id="title" name="title" placeholder="제목" value="<%= post?.title || '' %>" required>
+
+      <label for="content">내용</label>
+      <textarea id="content" name="content" placeholder="내용" rows="8"><%= post?.content || '' %></textarea>
+
+      <label for="attachment">파일 첨부 (선택 사항)</label>
+      <input type="file" id="attachment" name="attachment">
+
+      <button type="submit">저장</button>
+    </form>
+
+    <a href="/board" class="back-link">← 게시판으로 돌아가기</a>
+  </div>
+</body>
+</html>
