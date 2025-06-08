@@ -48,6 +48,15 @@ const createTables = [
       PRIMARY KEY(user_id, product_id),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+  )`,
+
+  `CREATE TABLE IF NOT EXISTS wishlist_items (
+      user_id INTEGER NOT NULL,
+      product_id INTEGER NOT NULL,
+      added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY(user_id, product_id),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
   )`
 ];
 
@@ -68,19 +77,29 @@ db.serialize(async () => { // 콜백 함수를 async로 유지
 
   try {
     // 1. 테이블 생성
-    for (const query of createTables) {
-      await new Promise((resolve, reject) => {
-        db.run(query, (err) => {
-          if (err) {
-            console.error(`❌ 쿼리 실행 실패: ${err.message}\n쿼리: ${query.split('\n')[0].substring(0, 50)}...`);
-            reject(err);
-          } else {
-            console.log(`✅ 테이블 생성 완료: ${query.split(' ')[5]}`);
-            resolve();
-          }
-        });
-      });
-    }
+    // db_init.js 파일 내
+for (const query of createTables) {
+  await new Promise((resolve, reject) => {
+    db.run(query, (err) => {
+      if (err) {
+        console.error(`❌ 쿼리 실행 실패: ${err.message}\n쿼리: ${query.split('\n')[0].substring(0, 50)}...`);
+        reject(err);
+      } else {
+        // 이 부분을 수정합니다.
+        const tableNameMatch = query.match(/CREATE TABLE IF NOT EXISTS (\S+)/);
+        if (tableNameMatch && tableNameMatch[1]) {
+            console.log(`✅ 테이블 생성/확인 완료: ${tableNameMatch[1]}`);
+        } else if (query.startsWith('DROP TABLE')) {
+            console.log(`🗑️ 테이블 삭제 완료: ${query.split(' ')[3] || query.split(' ')[2]}`);
+        } else {
+            console.log(`✅ 쿼리 실행 완료: ${query.split('\n')[0].substring(0, 50)}...`);
+        }
+        resolve();
+      }
+    });
+  });
+}
+
 
     // 2. 관리자 계정 'admin' 추가
     const adminUsername = 'admin';

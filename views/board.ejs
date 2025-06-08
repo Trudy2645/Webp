@@ -111,14 +111,21 @@
       margin-top: 5px;
     }
 
-    li .actions a {
+    /* 삭제 버튼 스타일을 a 태그에서 button 태그로 옮김 */
+    li .actions a,
+    li .actions button { /* 수정 링크와 삭제 버튼에 공통 스타일 적용 */
       color: #6c757d;
       font-size: 0.9em;
       text-decoration: none;
       transition: color 0.3s ease;
+      background: none; /* 버튼 기본 배경 제거 */
+      border: none; /* 버튼 기본 테두리 제거 */
+      padding: 0; /* 버튼 기본 패딩 제거 */
+      cursor: pointer; /* 버튼 커서 변경 */
     }
 
-    li .actions a:hover {
+    li .actions a:hover,
+    li .actions button:hover {
       color: #0d6efd;
       text-decoration: underline;
     }
@@ -136,6 +143,14 @@
         margin-left: 10px; /* 제목과 작성자 사이 간격 */
         font-size: 0.9em;
         color: #6c757d;
+    }
+
+    /* 공지사항 텍스트 스타일 */
+    .notice-prefix {
+        color: #dc3545; /* 빨간색 계열로 강조 */
+        font-weight: 700;
+        margin-right: 8px;
+        font-size: 1em;
     }
 
     footer {
@@ -177,12 +192,17 @@
         <% posts.forEach(post => { %>
           <li class="post-item">
             <a href="/board/view/<%= post.id %>">
+              <% if (post.author === 'admin') { %>
+                <span class="notice-prefix">[공지사항]</span>
+              <% } %>
               <%= post.title %> <span class="post-author">- <%= post.author %></span>
             </a>
             <div class="actions">
-              <% if (post.isAuthor) { %>
+              <% if (post.isAuthor || (user && user.username === 'admin')) { %>
                 <a href="/board/edit/<%= post.id %>">수정</a>
-                <a href="/board/delete/<%= post.id %>" onclick="return confirm('정말 삭제하시겠습니까? 관련 답글도 모두 삭제됩니다.')">삭제</a>
+                <form action="/board/delete/<%= post.id %>" method="POST" style="display:inline;">
+                  <button type="submit" onclick="return confirm('정말 삭제하시겠습니까? 관련 답글도 모두 삭제됩니다.')">삭제</button>
+                </form>
               <% } %>
             </div>
           </li>
@@ -190,12 +210,17 @@
             <% post.replies.forEach(reply => { %>
               <li class="post-item reply-item">
                 <a href="/board/view/<%= reply.id %>">
+                  <% if (reply.author === 'admin') { %>
+                    <span class="notice-prefix">[공지사항]</span>
+                  <% } %>
                   <span class="reply-prefix">└ Re:</span><%= reply.title %> <span class="post-author">- <%= reply.author %></span>
                 </a>
                 <div class="actions">
-                  <% if (reply.isAuthor) { %>
+                  <% if (reply.isAuthor || (user && user.username === 'admin')) { %>
                     <a href="/board/edit/<%= reply.id %>">수정</a>
-                    <a href="/board/delete/<%= reply.id %>" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</a>
+                    <form action="/board/delete/<%= reply.id %>" method="POST" style="display:inline;">
+                      <button type="submit" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
+                    </form>
                   <% } %>
                 </div>
               </li>
