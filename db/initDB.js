@@ -11,7 +11,17 @@ const createTables = [
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
-      name TEXT NOT NULL
+      name TEXT NOT NULL,
+      -- 새 필드 추가 시작
+      birthdate TEXT,
+      gender TEXT,
+      address TEXT,
+      email TEXT,
+      phone TEXT,
+      email_consent INTEGER DEFAULT 0,
+      personal_info_consent INTEGER DEFAULT 0,
+      sms_consent INTEGER DEFAULT 0
+      -- 새 필드 추가 끝
   )`,
   `CREATE TABLE IF NOT EXISTS posts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,14 +115,23 @@ for (const query of createTables) {
     const adminUsername = 'admin';
     const adminPassword = 'admin';
     const adminName = '관리자';
-
+    // 관리자 계정의 새 필드 기본값 설정 (필요에 따라 수정)
+    const adminBirthdate = '1990-01-01';
+    const adminGender = 'Male';
+    const adminAddress = 'Seoul, South Korea';
+    const adminEmail = 'admin@example.com';
+    const adminPhone = '010-1234-5678';
+    const adminEmailConsent = 1; // 1 = 동의, 0 = 비동의
+    const adminPersonalInfoConsent = 1;
+    const adminSmsConsent = 1;
     // 비밀번호 해싱
     const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
 
     await new Promise((resolve, reject) => {
       db.run(
-        'INSERT OR IGNORE INTO users (username, password, name) VALUES (?, ?, ?)',
-        [adminUsername, hashedAdminPassword, adminName],
+        // users 테이블의 새 필드에 대한 값 추가 (INSERT OR IGNORE 문 수정)
+        'INSERT OR IGNORE INTO users (username, password, name, birthdate, gender, address, email, phone, email_consent, personal_info_consent, sms_consent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [adminUsername, hashedAdminPassword, adminName, adminBirthdate, adminGender, adminAddress, adminEmail, adminPhone, adminEmailConsent, adminPersonalInfoConsent, adminSmsConsent],
         function (err) {
           if (err) {
             console.error('❌ 관리자 계정 삽입 실패:', err.message);

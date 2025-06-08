@@ -18,19 +18,48 @@ router.get('/register', (req, res) => {
 
 // 회원가입 처리
 router.post('/register', async (req, res) => {
-    const { username, password, name } = req.body;
+    const { 
+        username, 
+        password, 
+        name, 
+        birthdate,       // 추가: 생년월일
+        gender,          // 추가: 성별
+        address,         // 추가: 주소
+        email,           // 추가: 이메일
+        phone,           // 추가: 휴대폰 번호
+        email_consent,   // 추가: 이메일 수신 동의 (체크박스 값)
+        personal_info_consent, // 추가: 개인정보 활용 동의 (체크박스 값)
+        sms_consent      // 추가: SMS 수신 동의 (체크박스 값)
+    } = req.body;
 
-    if (!username || !password || !name) {
-        return res.status(400).send('사용자 이름, 비밀번호, 이름을 모두 입력해주세요.');
-    }
+    if (!username || !password || !name || !birthdate || !gender || !email || !personal_info_consent) {
+    return res.status(400).send('필수 입력 항목을 모두 작성해주세요.');
+}
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10); // 비밀번호 해싱 (saltRounds: 10)
+        // 동의 여부 필드는 체크박스에서 'on' 또는 undefined로 오므로, 1 또는 0으로 변환합니다.
+        const emailConsentValue = email_consent ? 1 : 0;
+        const personalInfoConsentValue = personal_info_consent ? 1 : 0;
+        const smsConsentValue = sms_consent ? 1 : 0;
 
         db.run(
-            'INSERT INTO users (username, password, name) VALUES (?, ?, ?)',
-            [username, hashedPassword, name],
-            function (err) { // 일반 함수를 사용하여 'this' 컨텍스트에 접근
+            // SQL 쿼리에 새로 추가된 필드들을 포함합니다.
+            'INSERT INTO users (username, password, name, birthdate, gender, address, email, phone, email_consent, personal_info_consent, sms_consent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                username, 
+                hashedPassword, 
+                name, 
+                birthdate, 
+                gender, 
+                address, 
+                email, 
+                phone, 
+                emailConsentValue,        // 변환된 동의 값
+                personalInfoConsentValue, // 변환된 동의 값
+                smsConsentValue           // 변환된 동의 값
+            ],
+            function (err){ // 일반 함수를 사용하여 'this' 컨텍스트에 접근
                 if (err) {
                     console.error('회원가입 DB 오류:', err.message);
                     // UNIQUE constraint failed 오류 (아이디 중복) 처리
@@ -56,6 +85,21 @@ router.get('/login', (req, res) => {
         return res.redirect('/');
     }
     res.render('login');
+});
+
+// 마이페이지 렌더링
+router.get('/mypage', (req, res) => {
+    // 로그인된 사용자만 마이페이지에 접근할 수 있도록 확인
+    if (!req.session.user) {
+        // 로그인되지 않았다면 로그인 페이지로 리다이렉트
+        // 중요한 것은 리다이렉트 후 함수 실행을 중단해야 합니다.
+        return res.redirect('/user/login'); 
+    }
+    // req.session.user는 app.js에서 res.locals.user로 이미 전달되므로,
+    // 여기서는 user 객체를 템플릿으로 다시 넘겨줄 필요 없이,
+    // EJS 템플릿에서 res.locals.user를 통해 직접 접근할 수 있습니다.
+    // 하지만 명시적으로 넘겨주는 것이 더 명확하고 일관적일 수 있습니다.
+    res.render('mypage');
 });
 
 // 로그인 처리
@@ -86,8 +130,21 @@ router.post('/login', async (req, res) => {
             console.log(`비밀번호 일치 여부: ${match ? '✅ 일치' : '❌ 불일치'}`);
 
             if (match) {
-                // 로그인 성공: 세션에 사용자 정보 저장 (비밀번호는 저장하지 않음)
-                req.session.user = { id: user.id, username: user.username, name: user.name };
+                // 로그인 성공: 세션에 사용자 정보 저장 (새로 추가된 필드들도 함께 저장)
+                // 비밀번호는 저장하지 않습니다.
+                req.session.user = { 
+                    id: user.id, 
+                    username: user.username, 
+                    name: user.name,
+                    birthdate: user.birthdate,          // 추가: 생년월일
+                    gender: user.gender,                // 추가: 성별
+                    address: user.address,              // 추가: 주소
+                    email: user.email,                  // 추가: 이메일
+                    phone: user.phone,                  // 추가: 휴대폰 번호
+                    email_consent: user.email_consent,  // 추가: 이메일 수신 동의
+                    personal_info_consent: user.personal_info_consent, // 추가: 개인정보 활용 동의
+                    sms_consent: user.sms_consent       // 추가: SMS 수신 동의
+                };
                 console.log(`🎉 로그인 성공: 사용자 '${user.username}'`);
                 res.redirect('/'); // 로그인 성공 후 홈으로 리다이렉트
             } else {
