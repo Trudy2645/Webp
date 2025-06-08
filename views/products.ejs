@@ -97,7 +97,15 @@
       <a href="/">홈</a>
       <a href="/products">상품목록</a>
       <a href="/cart">장바구니</a>
+      <a href="/wishlist">위시리스트</a> 
       <a href="/board">고객센터</a>
+      <% if (user) { %>
+        <a href="/user/mypage">마이페이지</a>
+        <a href="/user/logout">로그아웃</a>
+      <% } else { %>
+        <a href="/login">로그인</a>
+        <a href="/user/register">회원가입</a>
+      <% } %>
     </nav>
   </header>
 
