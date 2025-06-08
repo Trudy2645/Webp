@@ -12,7 +12,7 @@ const userRouter = require('./routes/user');
 const productRouter = require('./routes/products');
 const cartRouter = require('./routes/cart');
 const orderRouter = require('./routes/order');
-// const wishlistRouter = require('./routes/wishlist'); // wishlistRouter import
+const wishlistRouter = require('./routes/wishlist'); // wishlistRouter import
 
 var app = express();
 
@@ -48,7 +48,7 @@ app.get('/login', (req,res)=> {
 app.use('/products',productRouter);
 app.use('/cart', cartRouter);
 app.use('/order',orderRouter);
-// app.use('/wishlist', wishlistRouter); // /wishlist 경로로 접근
+app.use('/wishlist', wishlistRouter); // /wishlist 경로로 접근
 
 
 // catch 404 and forward to error handler

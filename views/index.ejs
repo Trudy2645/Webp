@@ -46,8 +46,8 @@
       border-bottom: 4px solid #e9ecef;
     }
     .banner {
-  position: relative;
-  }
+      position: relative;
+    }
     .banner .scroll-btn {
       position: absolute;
       bottom: 70px;
@@ -82,7 +82,7 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 2rem;
       width: 1000px;
-      height: 1850px;
+      /* height: 1850px; */ /* Removed fixed height to allow content to dictate height */
       justify-content: center;
       margin: 0 auto;
     }
@@ -119,6 +119,14 @@
       color: #0d6efd;
       margin-top: 0.3rem;
     }
+    .product-actions { /* Flex container for buttons */
+        display: flex;
+        gap: 0.5rem; /* Space between buttons */
+        margin-top: 0.5rem;
+    }
+    .product-actions .btn {
+        flex: 1; /* Make buttons take equal width */
+    }
     footer {
       margin-top: 4rem;
       padding: 2rem 0;
@@ -137,6 +145,36 @@
       target.scrollIntoView({ behavior: 'smooth' });
     }
   }
+
+  // Client-side JavaScript for adding to wishlist
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.add-to-wishlist-btn').forEach(button => {
+      button.addEventListener('click', async (event) => {
+        const productId = event.target.dataset.productId;
+
+        try {
+          const response = await fetch('/wishlist/add', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ productId: productId }),
+          });
+          const data = await response.json();
+
+          if (response.ok) { // Check for successful HTTP status (2xx)
+            alert(data.message);
+          } else {
+            // Handle server-side errors or messages
+            alert(data.message || '위시리스트 추가 중 오류가 발생했습니다.');
+          }
+        } catch (error) {
+          console.error('Error adding to wishlist:', error);
+          alert('위시리스트 추가 요청 중 네트워크 오류가 발생했습니다.');
+        }
+      });
+    });
+  });
 </script>
 <body>
   <header>
@@ -145,7 +183,7 @@
       <a href="/">홈</a>
       <a href="/products">상품목록</a>
       <a href="/cart">장바구니</a>
-      <a href="/board">고객센터</a>
+      <a href="/wishlist">위시리스트</a> <a href="/board">고객센터</a>
       <% if (user) { %>
         <a href="/user/logout">로그아웃</a>
       <% } else { %>
@@ -164,7 +202,7 @@
     <h2>🔥 인기 상품</h2>
     <div class="product-grid">
       <% const products = [
-        { id: 1, name: '부장님 저 몸이  안좋아서..', price: 35000, image: '/images/TakeDayOff.png' },
+        { id: 1, name: '부장님 저 몸이 안좋아서..', price: 35000, image: '/images/TakeDayOff.png' },
         { id: 2, name: '안녕히 계세요 여러분', price: 28000, image: '/images/GoHome.png' },
         { id: 3, name: '부장님과의 면담 패스', price: 5000, image: '/images/IDonKnow.png' },
         { id: 4, name: '1주일간 야근 없음', price: 250000, image: '/images/NoOverTime.png' },
@@ -178,10 +216,13 @@
           <img src="<%= product.image %>" alt="<%= product.name %>" />
           <p><strong><%- product.name %></strong></p>
           <p class="price">₩<%= product.price.toLocaleString() %></p>
-          <form action="/cart/add" method="POST" style="margin-top: 0.5rem;">
-            <input type="hidden" name="productId" value="<%= product.id %>">
-            <button type="submit" class="btn btn-outline-primary">🛒 장바구니 담기</button>
-          </form>
+          <div class="product-actions"> <form action="/cart/add" method="POST" style="flex: 1;"> <input type="hidden" name="productId" value="<%= product.id %>">
+              <button type="submit" class="btn btn-outline-primary">🛒 장바구니 담기</button>
+            </form>
+            <button class="btn btn-outline-danger add-to-wishlist-btn" data-product-id="<%= product.id %>">
+              ❤️ 위시리스트 추가
+            </button>
+          </div>
         </div>
       <% }); %>
     </div>

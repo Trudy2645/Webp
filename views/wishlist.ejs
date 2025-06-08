@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>내 위시리스트</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body { font-family: 'Pretendard', sans-serif; background-color: #f4f6f9; }
+    header {
+      background-color: #ffffff;
+      border-bottom: 1px solid #dee2e6;
+      padding: 1.2rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    header h1 {
+      font-weight: 800;
+      font-size: 1.8rem;
+      margin: 0;
+      color: #212529;
+    }
+    nav a {
+      margin-left: 1.5rem;
+      color: #495057;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    nav a:hover {
+      color: #0d6efd;
+    }
+    main { background-color: #ffffff; padding: 30px 40px; border-radius: 16px; box-shadow: 0 6px 16px rgba(0,0,0,0.1); width: 80%; max-width: 900px; margin: 2rem auto; }
+    .wishlist-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    .wishlist-item:last-child { border-bottom: none; }
+    .wishlist-item img { /* Added style for product images in wishlist */
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      margin-right: 15px;
+      border-radius: 5px;
+    }
+    .item-info {
+      flex-grow: 1; /* Allows info to take available space */
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .item-info h4 { margin: 0; font-weight: 600; color: #343a40; }
+    .item-info p { margin: 5px 0 0; color: #6c757d; font-size: 0.95rem;}
+    .item-info .price { font-weight: bold; color: #0d6efd; }
+    footer {
+      margin-top: 4rem;
+      padding: 2rem 0;
+      background-color: #ffffff;
+      border-top: 1px solid #dee2e6;
+      color: #868e96;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🪬 내 위시리스트</h1> <% // Changed header title for clarity %>
+    <nav>
+      <a href="/">홈</a>
+      <a href="/products">상품목록</a>
+      <a href="/cart">장바구니</a>
+      <a href="/wishlist">위시리스트</a>
+      <a href="/board">고객센터</a>
+      <% if (user) { %>
+        <a href="/user/logout">로그아웃</a>
+      <% } else { %>
+        <a href="/login">로그인</a>
+        <a href="/user/register">회원가입</a>
+      <% } %>
+    </nav>
+  </header>
+
+  <main>
+    <h2>내 위시리스트 ✨</h2>
+    <% if (wishlistItems && wishlistItems.length > 0) { %>
+      <ul class="list-unstyled">
+        <% wishlistItems.forEach(item => { %>
+          <li class="wishlist-item">
+            <% // item.image가 존재하고 비어있지 않은 문자열인지 확실히 확인합니다.
+               // 혹시 모를 경로 오류를 방지하기 위해 이미지 경로를 좀 더 명확하게 지정해봅니다.
+            %>
+            <% if (item.image && item.image.trim() !== '') { %>
+              <img src="/images/<%= item.image %>" alt="<%= item.name %> 이미지">
+            <% } else { %>
+              <img src="/images/default.png" alt="이미지 없음"> <% } %>
+            <div class="item-info">
+              <h4><%= item.emoji || '' %> <%= item.name %></h4>
+              <p><%= item.description %></p>
+              <p class="price">가격: <%= item.price.toLocaleString() %>원</p>
+            </div>
+            <button class="btn btn-danger remove-from-wishlist-btn" data-product-id="<%= item.id %>">
+              삭제
+            </button>
+          </li>
+        <% }); %>
+      </ul>
+    <% } else { %>
+      <p>위시리스트가 비어있습니다.</p>
+    <% } %>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 고객센터 시스템. All rights reserved.</p>
+  </footer>
+
+  <script>
+    document.querySelectorAll('.remove-from-wishlist-btn').forEach(button => {
+      button.addEventListener('click', async (event) => {
+        const productId = event.target.dataset.productId;
+        if (confirm('정말 위시리스트에서 이 상품을 삭제하시겠습니까?')) {
+          try {
+            const response = await fetch('/wishlist/remove', {
+              method: 'POST', // DELETE 요청으로 변경할 수도 있음
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ productId: productId }),
+            });
+            const data = await response.json();
+            if (response.ok) { // Check for successful HTTP status (2xx)
+              alert(data.message);
+              window.location.reload(); // 성공 시 페이지 새로고침
+            } else {
+              alert(data.message || '위시리스트 삭제 실패');
+            }
+          } catch (error) {
+            console.error('Error removing from wishlist:', error);
+            alert('위시리스트 삭제 중 오류가 발생했습니다.');
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -173,7 +173,7 @@
       <% if (user) { %>
         <a href="/user/logout">로그아웃</a>
       <% } else { %>
-        <a href="/user/login">로그인</a>
+        <a href="/login">로그인</a>
         <a href="/user/register">회원가입</a>
       <% } %>
     </nav>
@@ -188,14 +188,7 @@
 
     <form action="/board/create" method="POST">
       <input type="hidden" name="parent_id" value="<%= parentId %>">
-      <div class="form-group">
-        <label for="author">작성자</label>
-        <% if (user) { %>
-          <input type="text" id="author" name="author" class="form-control" value="<%= user.username %>" readonly required>
-        <% } else { %>
-          <input type="text" id="author" name="author" class="form-control" value="익명" readonly required>
-        <% } %>
-      </div>
+      <input type="hidden" name="title" value="Re: <%= parentTitle %>">
 
       <div class="form-group">
         <label for="content">내용</label>
